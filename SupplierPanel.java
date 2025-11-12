@@ -69,7 +69,9 @@ public class SupplierPanel extends JPanel{
     }
 
     private void addSupplier(){
-        if(JOptionPane.showConfirmDialog(this,"Add this supplier?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this,"Add this supplier?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION){
+            return;
+        }
         String sql="INSERT INTO Supplier (supplier_name, contact_person, contact_number, email, address, supplier_status) " + "VALUES (?,?,?,?,?,?)";
         try(Connection c=DBUtils.getConn();
             PreparedStatement ps=c.prepareStatement(sql)){
@@ -94,7 +96,9 @@ public class SupplierPanel extends JPanel{
             return;
         }
         int id=(int)model.getValueAt(row,0);
-        if(JOptionPane.showConfirmDialog(this,"Update supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this,"Update supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION){
+            return;
+        }
         String sql="UPDATE Supplier SET supplier_name=?, contact_person=?, contact_number=?, email=?, address=?, supplier_status=? " + "WHERE supplier_id=?";
         try(Connection c=DBUtils.getConn();
             PreparedStatement ps=c.prepareStatement(sql)){
@@ -113,9 +117,15 @@ public class SupplierPanel extends JPanel{
     }
 
     private void deleteSelectedSupplier(){
-        int row=table.getSelectedRow(); if(row<0){DBUtils.info("Select a supplier first.");return;}
+        int row=table.getSelectedRow(); 
+        if(row<0){
+            DBUtils.info("Select a supplier first.");
+            return;
+        }
         int id=(int)model.getValueAt(row,0);
-        if(JOptionPane.showConfirmDialog(this,"Delete supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this,"Delete supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION){
+            return;
+        }
         try(Connection c=DBUtils.getConn();
             PreparedStatement ps=c.prepareStatement("DELETE FROM Supplier WHERE supplier_id=?")){
             ps.setInt(1,id);
@@ -135,3 +145,4 @@ public class SupplierPanel extends JPanel{
         cbStatus.setSelectedIndex(0);
     }
 }
+
