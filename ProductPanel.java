@@ -76,14 +76,16 @@ public class ProductPanel extends JPanel{
                         rs.getString(7)
                 });
             }
-        } catch(SQLException ex){
+        }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
 
     private void addProduct(){
-        if(JOptionPane.showConfirmDialog(this, "Add this product?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-
+        if(JOptionPane.showConfirmDialog(this, "Add this product?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
+            return;
+        }
+        
         String sql = "INSERT INTO Product " + "(product_name, description, category, unit_of_measure, reorder_level, product_status) " + "VALUES (?,?,?,?,?,?)";
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
@@ -109,8 +111,10 @@ public class ProductPanel extends JPanel{
         }
         int id = (int) model.getValueAt(row, 0);
 
-        if(JOptionPane.showConfirmDialog(this, "Update product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-
+        if(JOptionPane.showConfirmDialog(this, "Update product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
+            return;
+        }
+        
         String sql = "UPDATE Product SET product_name=?, description=?, category=?, " + "unit_of_measure=?, reorder_level=?, product_status=? WHERE product_id=?";
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
@@ -136,8 +140,10 @@ public class ProductPanel extends JPanel{
         }
         int id = (int) model.getValueAt(row, 0);
 
-        if(JOptionPane.showConfirmDialog(this, "Delete product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-
+        if(JOptionPane.showConfirmDialog(this, "Delete product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
+            return;
+        }
+        
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement("DELETE FROM Product WHERE product_id=?")) {
                 ps.setInt(1, id);
@@ -157,3 +163,4 @@ public class ProductPanel extends JPanel{
         cbStatus.setSelectedIndex(0);
     }
 }
+
