@@ -13,15 +13,15 @@ public class ReportPanel extends JPanel{
         setLayout(new BorderLayout());
         model.setColumnIdentifiers(new String[]{"Product","Stock","Reorder Level","Stock Status"});
         table.setModel(model);
-        
+
         table.setDefaultEditor(Object.class, null);
-        
+
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer(){
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column){
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-                if(!isSelected){ 
+                if(!isSelected){
                     Object stockObj = table.getValueAt(row, 1);
                     Object reorderObj = table.getValueAt(row, 2);
 
@@ -61,8 +61,8 @@ public class ReportPanel extends JPanel{
                 "LEFT JOIN StockMovement m ON p.product_id=m.product_id " +
                 "GROUP BY product_name, reorder_level";
         try(Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
 
             while(rs.next()){
                 BigDecimal stock = rs.getBigDecimal("stock");
@@ -79,7 +79,7 @@ public class ReportPanel extends JPanel{
         }
     }
 
-    public void refresh(){ 
+    public void refresh(){
         loadReport();
     }
 }
