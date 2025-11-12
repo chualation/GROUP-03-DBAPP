@@ -1,9 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
 
-public class CloudKitchenApp extends JFrame {
+public class CloudKitchenApp extends JFrame{
 
-    public CloudKitchenApp() {
+    public CloudKitchenApp(){
         super("Cloud Kitchen Inventory (MySQL)");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 700);
