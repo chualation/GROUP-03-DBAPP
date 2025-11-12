@@ -3,6 +3,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
 
+
 public class ProductPanel extends JPanel{
     private final JTable table = new JTable();
     private final DefaultTableModel model = new DefaultTableModel();
@@ -13,7 +14,6 @@ public class ProductPanel extends JPanel{
     private final JTextField tfReorder = new JTextField("0");
     private final JComboBox<String> cbStatus = new JComboBox<>(new String[]{"Active", "Inactive"});
 
-    private final JButton btnLoad = new JButton("Load");
     private final JButton btnAdd = new JButton("Add");
     private final JButton btnUpdate = new JButton("Update Selected");
     private final JButton btnDelete = new JButton("Delete Selected");
@@ -41,7 +41,6 @@ public class ProductPanel extends JPanel{
         form.add(new JLabel("Status:")); form.add(cbStatus);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttons.add(btnLoad);
         buttons.add(btnAdd);
         buttons.add(btnUpdate);
         buttons.add(btnDelete);
@@ -51,10 +50,23 @@ public class ProductPanel extends JPanel{
         south.add(buttons, BorderLayout.SOUTH);
         add(south, BorderLayout.SOUTH);
 
-        btnLoad.addActionListener(e -> loadProducts());
         btnAdd.addActionListener(e -> addProduct());
         btnUpdate.addActionListener(e -> updateSelectedProduct());
         btnDelete.addActionListener(e -> deleteSelectedProduct());
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) { // Prevent double events
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    tfName.setText(model.getValueAt(row, 1).toString());
+                    tfDesc.setText(model.getValueAt(row, 2).toString());
+                    tfCategory.setText(model.getValueAt(row, 3).toString());
+                    tfUom.setText(model.getValueAt(row, 4).toString());
+                    tfReorder.setText(model.getValueAt(row, 5).toString());
+                    cbStatus.setSelectedItem(model.getValueAt(row, 6).toString());
+                }
+            }
+        });
 
         loadProducts();
     }
@@ -85,19 +97,19 @@ public class ProductPanel extends JPanel{
         if(JOptionPane.showConfirmDialog(this, "Add this product?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
         }
-        
+
         String sql = "INSERT INTO Product " + "(product_name, description, category, unit_of_measure, reorder_level, product_status) " + "VALUES (?,?,?,?,?,?)";
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
-                ps.setString(1, tfName.getText().trim());
-                ps.setString(2, tfDesc.getText().trim());
-                ps.setString(3, tfCategory.getText().trim());
-                ps.setString(4, tfUom.getText().trim());
-                ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
-                ps.setString(6, (String) cbStatus.getSelectedItem());
-                ps.executeUpdate();
-                loadProducts();
-                clearForm();
+            ps.setString(1, tfName.getText().trim());
+            ps.setString(2, tfDesc.getText().trim());
+            ps.setString(3, tfCategory.getText().trim());
+            ps.setString(4, tfUom.getText().trim());
+            ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
+            ps.setString(6, (String) cbStatus.getSelectedItem());
+            ps.executeUpdate();
+            loadProducts();
+            clearForm();
         }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
@@ -114,19 +126,19 @@ public class ProductPanel extends JPanel{
         if(JOptionPane.showConfirmDialog(this, "Update product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
         }
-        
+
         String sql = "UPDATE Product SET product_name=?, description=?, category=?, " + "unit_of_measure=?, reorder_level=?, product_status=? WHERE product_id=?";
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
-                ps.setString(1, tfName.getText().trim());
-                ps.setString(2, tfDesc.getText().trim());
-                ps.setString(3, tfCategory.getText().trim());
-                ps.setString(4, tfUom.getText().trim());
-                ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
-                ps.setString(6, (String) cbStatus.getSelectedItem());
-                ps.setInt(7, id);
-                ps.executeUpdate();
-                loadProducts();
+            ps.setString(1, tfName.getText().trim());
+            ps.setString(2, tfDesc.getText().trim());
+            ps.setString(3, tfCategory.getText().trim());
+            ps.setString(4, tfUom.getText().trim());
+            ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
+            ps.setString(6, (String) cbStatus.getSelectedItem());
+            ps.setInt(7, id);
+            ps.executeUpdate();
+            loadProducts();
         }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
@@ -143,12 +155,12 @@ public class ProductPanel extends JPanel{
         if(JOptionPane.showConfirmDialog(this, "Delete product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
         }
-        
+
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement("DELETE FROM Product WHERE product_id=?")) {
-                ps.setInt(1, id);
-                ps.executeUpdate();
-                loadProducts();
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            loadProducts();
         }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
@@ -163,4 +175,3 @@ public class ProductPanel extends JPanel{
         cbStatus.setSelectedIndex(0);
     }
 }
-
