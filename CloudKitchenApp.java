@@ -5,6 +5,10 @@ public class CloudKitchenApp extends JFrame{
 
     public CloudKitchenApp(){
         super("Cloud Kitchen Inventory (MySQL)");
+
+        ImageIcon icon = new ImageIcon("icon.png"); // path relative to project root
+        setIconImage(icon.getImage());
+        
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 700);
         setLocationRelativeTo(null);
