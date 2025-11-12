@@ -117,37 +117,37 @@ public class MovementPanel extends JPanel{
         String sql = "INSERT INTO StockMovement (product_id, location_id, supplier_id, quantity, " + "movement_type, movement_date, reason) VALUES (?,?,?,?,?,?,?)";
 
         try(Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement(sql)){
+            PreparedStatement ps = c.prepareStatement(sql)){
 
-            ps.setInt(1, ((Item) cbProduct.getSelectedItem()).id);
-            ps.setInt(2, ((Item) cbLocation.getSelectedItem()).id);
-            int supId = ((Item) cbSupplier.getSelectedItem()).id;
-            if(supId == 0){
-                ps.setNull(3, Types.INTEGER);
-            }else{
-                ps.setInt(3, supId);
-            }
+                ps.setInt(1, ((Item) cbProduct.getSelectedItem()).id);
+                ps.setInt(2, ((Item) cbLocation.getSelectedItem()).id);
+                int supId = ((Item) cbSupplier.getSelectedItem()).id;
+                if(supId == 0){
+                    ps.setNull(3, Types.INTEGER);
+                }else{
+                    ps.setInt(3, supId);
+                }
 
-            ps.setBigDecimal(4, DBUtils.toDecimal(tfQty.getText()));
-            ps.setString(5, (String) cbType.getSelectedItem());
-            ps.setDate(6, Date.valueOf(tfDate.getText().trim()));
-            ps.setString(7, tfReason.getText().trim());
-            ps.executeUpdate();
+                ps.setBigDecimal(4, DBUtils.toDecimal(tfQty.getText()));
+                ps.setString(5, (String) cbType.getSelectedItem());
+                ps.setDate(6, Date.valueOf(tfDate.getText().trim()));
+                ps.setString(7, tfReason.getText().trim());
+                ps.executeUpdate();
 
-            loadMovements();
-            reportPanel.refresh(); // auto-refresh report
-        }catch(SQLException ex){ 
-            DBUtils.showErr(ex); 
+                loadMovements();
+                reportPanel.refresh(); // auto-refresh report
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
         }
     }
-    
+
     public static class Item{
         public int id;
         public String name;
-        public Item(int i, String n){ 
+        public Item(int i, String n){
             id = i; name = n;
         }
-        public String toString(){ 
+        public String toString(){
             return name;
         }
     }
