@@ -3,7 +3,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
 
-public class SupplierPanel extends JPanel {
+public class SupplierPanel extends JPanel{
     private final JTable table = new JTable();
     private final DefaultTableModel model = new DefaultTableModel();
     private final JTextField tfName = new JTextField();
@@ -20,7 +20,6 @@ public class SupplierPanel extends JPanel {
         });
         table.setModel(model);
 
-        // 🔒 Make table cells non-editable (still selectable/scrollable)
         table.setDefaultEditor(Object.class, null);
 
         add(new JScrollPane(table),BorderLayout.CENTER);
@@ -35,8 +34,7 @@ public class SupplierPanel extends JPanel {
         form.add(new JLabel("Status:"));          form.add(cbStatus);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnLoad=new JButton("Load"), btnAdd=new JButton("Add"),
-                btnUpdate=new JButton("Update Selected"), btnDelete=new JButton("Delete Selected");
+        JButton btnLoad=new JButton("Load"), btnAdd=new JButton("Add"), btnUpdate=new JButton("Update Selected"), btnDelete=new JButton("Delete Selected");
         buttons.add(btnLoad); buttons.add(btnAdd); buttons.add(btnUpdate); buttons.add(btnDelete);
 
         JPanel south=new JPanel(new BorderLayout());
@@ -65,58 +63,67 @@ public class SupplierPanel extends JPanel {
                         rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7)
                 });
             }
-        } catch(SQLException ex){ DBUtils.showErr(ex); }
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
     }
 
     private void addSupplier(){
-        if(JOptionPane.showConfirmDialog(this,"Add this supplier?","Confirm",
-                JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
-        String sql="INSERT INTO Supplier (supplier_name, contact_person, contact_number, email, address, supplier_status) " +
-                "VALUES (?,?,?,?,?,?)";
-        try(Connection c=DBUtils.getConn(); PreparedStatement ps=c.prepareStatement(sql)){
-            ps.setString(1,tfName.getText().trim());
-            ps.setString(2,tfContactPerson.getText().trim());
-            ps.setString(3,tfContactNo.getText().trim());
-            ps.setString(4,tfEmail.getText().trim());
-            ps.setString(5,tfAddress.getText().trim());
-            ps.setString(6,(String)cbStatus.getSelectedItem());
-            ps.executeUpdate();
-            loadSuppliers();
-            clearForm();
-        }catch(SQLException ex){DBUtils.showErr(ex);}
+        if(JOptionPane.showConfirmDialog(this,"Add this supplier?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
+        String sql="INSERT INTO Supplier (supplier_name, contact_person, contact_number, email, address, supplier_status) " + "VALUES (?,?,?,?,?,?)";
+        try(Connection c=DBUtils.getConn();
+            PreparedStatement ps=c.prepareStatement(sql)){
+                ps.setString(1,tfName.getText().trim());
+                ps.setString(2,tfContactPerson.getText().trim());
+                ps.setString(3,tfContactNo.getText().trim());
+                ps.setString(4,tfEmail.getText().trim());
+                ps.setString(5,tfAddress.getText().trim());
+                ps.setString(6,(String)cbStatus.getSelectedItem());
+                ps.executeUpdate();
+                loadSuppliers();
+                clearForm();
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
     }
 
     private void updateSelectedSupplier(){
-        int row=table.getSelectedRow(); if(row<0){DBUtils.info("Select a supplier first.");return;}
+        int row=table.getSelectedRow();
+        if(row<0){
+            DBUtils.info("Select a supplier first.");
+            return;
+        }
         int id=(int)model.getValueAt(row,0);
-        if(JOptionPane.showConfirmDialog(this,"Update supplier #"+id+"?","Confirm",
-                JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
-        String sql="UPDATE Supplier SET supplier_name=?, contact_person=?, contact_number=?, email=?, address=?, supplier_status=? " +
-                "WHERE supplier_id=?";
-        try(Connection c=DBUtils.getConn(); PreparedStatement ps=c.prepareStatement(sql)){
-            ps.setString(1,tfName.getText().trim());
-            ps.setString(2,tfContactPerson.getText().trim());
-            ps.setString(3,tfContactNo.getText().trim());
-            ps.setString(4,tfEmail.getText().trim());
-            ps.setString(5,tfAddress.getText().trim());
-            ps.setString(6,(String)cbStatus.getSelectedItem());
-            ps.setInt(7,id);
-            ps.executeUpdate();
-            loadSuppliers();
-        }catch(SQLException ex){DBUtils.showErr(ex);}
+        if(JOptionPane.showConfirmDialog(this,"Update supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
+        String sql="UPDATE Supplier SET supplier_name=?, contact_person=?, contact_number=?, email=?, address=?, supplier_status=? " + "WHERE supplier_id=?";
+        try(Connection c=DBUtils.getConn();
+            PreparedStatement ps=c.prepareStatement(sql)){
+                ps.setString(1,tfName.getText().trim());
+                ps.setString(2,tfContactPerson.getText().trim());
+                ps.setString(3,tfContactNo.getText().trim());
+                ps.setString(4,tfEmail.getText().trim());
+                ps.setString(5,tfAddress.getText().trim());
+                ps.setString(6,(String)cbStatus.getSelectedItem());
+                ps.setInt(7,id);
+                ps.executeUpdate();
+                loadSuppliers();
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
     }
 
     private void deleteSelectedSupplier(){
         int row=table.getSelectedRow(); if(row<0){DBUtils.info("Select a supplier first.");return;}
         int id=(int)model.getValueAt(row,0);
-        if(JOptionPane.showConfirmDialog(this,"Delete supplier #"+id+"?","Confirm",
-                JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this,"Delete supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return;
         try(Connection c=DBUtils.getConn();
             PreparedStatement ps=c.prepareStatement("DELETE FROM Supplier WHERE supplier_id=?")){
             ps.setInt(1,id);
             ps.executeUpdate();
             loadSuppliers();
-        }catch(SQLException ex){DBUtils.showErr(ex);}
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
     }
 
     private void clearForm(){
