@@ -28,19 +28,30 @@ public class LocationPanel extends JPanel{
         form.add(new JLabel("Temperature Control:"));  form.add(cbTemp);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnLoad = new JButton("Load"), btnAdd = new JButton("Add"),
+        JButton btnAdd = new JButton("Add"),
                 btnUpdate = new JButton("Update Selected"), btnDelete = new JButton("Delete Selected");
-        buttons.add(btnLoad); buttons.add(btnAdd); buttons.add(btnUpdate); buttons.add(btnDelete);
+        buttons.add(btnAdd); buttons.add(btnUpdate); buttons.add(btnDelete);
 
         JPanel south = new JPanel(new BorderLayout());
         south.add(form, BorderLayout.CENTER);
         south.add(buttons, BorderLayout.SOUTH);
         add(south, BorderLayout.SOUTH);
 
-        btnLoad.addActionListener(e -> loadLocations());
         btnAdd.addActionListener(e -> addLocation());
         btnUpdate.addActionListener(e -> updateSelectedLocation());
         btnDelete.addActionListener(e -> deleteSelectedLocation());
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    tfName.setText(model.getValueAt(row, 1).toString());
+                    tfAreaDesc.setText(model.getValueAt(row, 2).toString());
+                    tfCapacity.setText(model.getValueAt(row, 3).toString());
+                    cbTemp.setSelectedItem(model.getValueAt(row, 4).toString());
+                }
+            }
+        });
 
         loadLocations();
     }
@@ -49,8 +60,8 @@ public class LocationPanel extends JPanel{
         model.setRowCount(0);
         String sql = "SELECT location_id, location_name, area_description, capacity, temperature_control " + "FROM StorageLocation ORDER BY location_name";
         try(Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()){
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()){
             while(rs.next()){
                 model.addRow(new Object[]{
                         rs.getInt(1),
@@ -73,14 +84,14 @@ public class LocationPanel extends JPanel{
         String sql = "INSERT INTO StorageLocation (location_name, area_description, capacity, temperature_control) " + "VALUES (?,?,?,?)";
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
-                ps.setString(1, tfName.getText().trim());
-                ps.setString(2, tfAreaDesc.getText().trim());
-                ps.setBigDecimal(3, DBUtils.toDecimal(tfCapacity.getText()));
-                ps.setString(4, (String) cbTemp.getSelectedItem());
-                ps.executeUpdate();
-                loadLocations();
-                clearForm();
-            }catch(SQLException ex){
+            ps.setString(1, tfName.getText().trim());
+            ps.setString(2, tfAreaDesc.getText().trim());
+            ps.setBigDecimal(3, DBUtils.toDecimal(tfCapacity.getText()));
+            ps.setString(4, (String) cbTemp.getSelectedItem());
+            ps.executeUpdate();
+            loadLocations();
+            clearForm();
+        }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
@@ -96,17 +107,17 @@ public class LocationPanel extends JPanel{
         if(JOptionPane.showConfirmDialog(this,"Update location #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
         }
-        
+
         String sql = "UPDATE StorageLocation SET location_name=?, area_description=?, capacity=?, temperature_control=? " + "WHERE location_id=?";
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
-                ps.setString(1, tfName.getText().trim());
-                ps.setString(2, tfAreaDesc.getText().trim());
-                ps.setBigDecimal(3, DBUtils.toDecimal(tfCapacity.getText()));
-                ps.setString(4, (String) cbTemp.getSelectedItem());
-                ps.setInt(5, id);
-                ps.executeUpdate();
-                loadLocations();
+            ps.setString(1, tfName.getText().trim());
+            ps.setString(2, tfAreaDesc.getText().trim());
+            ps.setBigDecimal(3, DBUtils.toDecimal(tfCapacity.getText()));
+            ps.setString(4, (String) cbTemp.getSelectedItem());
+            ps.setInt(5, id);
+            ps.executeUpdate();
+            loadLocations();
         }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
@@ -126,10 +137,10 @@ public class LocationPanel extends JPanel{
 
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement("DELETE FROM StorageLocation WHERE location_id=?")){
-                ps.setInt(1, id);
-                ps.executeUpdate();
-                loadLocations();
-        }catch(SQLException ex){ 
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            loadLocations();
+        }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
@@ -141,4 +152,3 @@ public class LocationPanel extends JPanel{
         cbTemp.setSelectedIndex(0);
     }
 }
-
