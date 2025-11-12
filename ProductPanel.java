@@ -63,8 +63,8 @@ public class ProductPanel extends JPanel{
         model.setRowCount(0);
         String sql = "SELECT product_id, product_name, description, category, " + "unit_of_measure, reorder_level, product_status " + "FROM Product ORDER BY product_name";
         try(Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()){
             while(rs.next()){
                 model.addRow(new Object[]{
                         rs.getInt(1),
@@ -130,8 +130,8 @@ public class ProductPanel extends JPanel{
 
     private void deleteSelectedProduct(){
         int row = table.getSelectedRow();
-        if(row < 0){ 
-            DBUtils.info("Select a product first."); 
+        if(row < 0){
+            DBUtils.info("Select a product first.");
             return;
         }
         int id = (int) model.getValueAt(row, 0);
