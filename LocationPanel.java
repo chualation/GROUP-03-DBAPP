@@ -66,7 +66,9 @@ public class LocationPanel extends JPanel{
     }
 
     private void addLocation(){
-        if(JOptionPane.showConfirmDialog(this,"Add this location?","Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this,"Add this location?","Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
+            return;
+        }
 
         String sql = "INSERT INTO StorageLocation (location_name, area_description, capacity, temperature_control) " + "VALUES (?,?,?,?)";
         try(Connection c = DBUtils.getConn();
@@ -91,8 +93,10 @@ public class LocationPanel extends JPanel{
         }
         int id = (int) model.getValueAt(row, 0);
 
-        if(JOptionPane.showConfirmDialog(this,"Update location #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-
+        if(JOptionPane.showConfirmDialog(this,"Update location #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
+            return;
+        }
+        
         String sql = "UPDATE StorageLocation SET location_name=?, area_description=?, capacity=?, temperature_control=? " + "WHERE location_id=?";
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
@@ -116,7 +120,9 @@ public class LocationPanel extends JPanel{
         }
         int id = (int) model.getValueAt(row, 0);
 
-        if(JOptionPane.showConfirmDialog(this,"Delete location #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this,"Delete location #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
+            return;
+        }
 
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement("DELETE FROM StorageLocation WHERE location_id=?")){
@@ -135,3 +141,4 @@ public class LocationPanel extends JPanel{
         cbTemp.setSelectedIndex(0);
     }
 }
+
