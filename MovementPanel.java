@@ -1,3 +1,4 @@
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -42,19 +43,13 @@ public class MovementPanel extends JPanel{
         form.add(new JLabel("Reason:"));               form.add(tfReason);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnLoad = new JButton("Load");
         JButton btnAdd = new JButton("Add");
-        buttons.add(btnLoad);
         buttons.add(btnAdd);
 
         JPanel south = new JPanel(new BorderLayout());
         south.add(form, BorderLayout.CENTER);
         south.add(buttons, BorderLayout.SOUTH);
         add(south, BorderLayout.SOUTH);
-
-        btnLoad.addActionListener(e ->{
-            loadComboData(); loadMovements();
-        });
 
         btnAdd.addActionListener(e -> addMovement());
 
@@ -84,15 +79,15 @@ public class MovementPanel extends JPanel{
     private void loadMovements(){
         model.setRowCount(0);
         String sql = "SELECT m.movement_id, p.product_name, l.location_name, s.supplier_name, " +
-                        "m.quantity, m.movement_type, m.movement_date, m.reason " +
-                        "FROM StockMovement m " +
-                        "LEFT JOIN Product p ON m.product_id = p.product_id " +
-                        "LEFT JOIN StorageLocation l ON m.location_id = l.location_id " +
-                        "LEFT JOIN Supplier s ON m.supplier_id = s.supplier_id " +
-                        "ORDER BY m.movement_date DESC";
+                "m.quantity, m.movement_type, m.movement_date, m.reason " +
+                "FROM StockMovement m " +
+                "LEFT JOIN Product p ON m.product_id = p.product_id " +
+                "LEFT JOIN StorageLocation l ON m.location_id = l.location_id " +
+                "LEFT JOIN Supplier s ON m.supplier_id = s.supplier_id " +
+                "ORDER BY m.movement_date DESC";
         try(Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
             while(rs.next()){
                 model.addRow(new Object[]{
                         rs.getInt(1),
@@ -114,29 +109,29 @@ public class MovementPanel extends JPanel{
         if(JOptionPane.showConfirmDialog(this, "Add this movement?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
         }
-        
+
         String sql = "INSERT INTO StockMovement (product_id, location_id, supplier_id, quantity, " + "movement_type, movement_date, reason) VALUES (?,?,?,?,?,?,?)";
 
         try(Connection c = DBUtils.getConn();
             PreparedStatement ps = c.prepareStatement(sql)){
 
-                ps.setInt(1, ((Item) cbProduct.getSelectedItem()).id);
-                ps.setInt(2, ((Item) cbLocation.getSelectedItem()).id);
-                int supId = ((Item) cbSupplier.getSelectedItem()).id;
-                if(supId == 0){
-                    ps.setNull(3, Types.INTEGER);
-                }else{
-                    ps.setInt(3, supId);
-                }
+            ps.setInt(1, ((Item) cbProduct.getSelectedItem()).id);
+            ps.setInt(2, ((Item) cbLocation.getSelectedItem()).id);
+            int supId = ((Item) cbSupplier.getSelectedItem()).id;
+            if(supId == 0){
+                ps.setNull(3, Types.INTEGER);
+            }else{
+                ps.setInt(3, supId);
+            }
 
-                ps.setBigDecimal(4, DBUtils.toDecimal(tfQty.getText()));
-                ps.setString(5, (String) cbType.getSelectedItem());
-                ps.setDate(6, Date.valueOf(tfDate.getText().trim()));
-                ps.setString(7, tfReason.getText().trim());
-                ps.executeUpdate();
+            ps.setBigDecimal(4, DBUtils.toDecimal(tfQty.getText()));
+            ps.setString(5, (String) cbType.getSelectedItem());
+            ps.setDate(6, Date.valueOf(tfDate.getText().trim()));
+            ps.setString(7, tfReason.getText().trim());
+            ps.executeUpdate();
 
-                loadMovements();
-                reportPanel.refresh(); // auto-refresh report
+            loadMovements();
+            reportPanel.refresh(); // auto-refresh report
         }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
@@ -153,4 +148,3 @@ public class MovementPanel extends JPanel{
         }
     }
 }
-
