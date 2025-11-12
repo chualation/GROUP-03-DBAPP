@@ -83,8 +83,7 @@ public class MovementPanel extends JPanel{
 
     private void loadMovements(){
         model.setRowCount(0);
-        String sql =
-                "SELECT m.movement_id, p.product_name, l.location_name, s.supplier_name, " +
+        String sql = "SELECT m.movement_id, p.product_name, l.location_name, s.supplier_name, " +
                         "m.quantity, m.movement_type, m.movement_date, m.reason " +
                         "FROM StockMovement m " +
                         "LEFT JOIN Product p ON m.product_id = p.product_id " +
@@ -112,8 +111,10 @@ public class MovementPanel extends JPanel{
     }
 
     private void addMovement(){
-        if(JOptionPane.showConfirmDialog(this, "Add this movement?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-
+        if(JOptionPane.showConfirmDialog(this, "Add this movement?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
+            return;
+        }
+        
         String sql = "INSERT INTO StockMovement (product_id, location_id, supplier_id, quantity, " + "movement_type, movement_date, reason) VALUES (?,?,?,?,?,?,?)";
 
         try(Connection c = DBUtils.getConn();
@@ -152,3 +153,4 @@ public class MovementPanel extends JPanel{
         }
     }
 }
+
