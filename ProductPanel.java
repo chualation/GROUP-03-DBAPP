@@ -3,7 +3,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
 
-public class ProductPanel extends JPanel {
+public class ProductPanel extends JPanel{
     private final JTable table = new JTable();
     private final DefaultTableModel model = new DefaultTableModel();
     private final JTextField tfName = new JTextField();
@@ -18,22 +18,19 @@ public class ProductPanel extends JPanel {
     private final JButton btnUpdate = new JButton("Update Selected");
     private final JButton btnDelete = new JButton("Delete Selected");
 
-    public ProductPanel() {
+    public ProductPanel(){
         setLayout(new BorderLayout(10, 10));
 
-        // ----- TABLE SETUP -----
         model.setColumnIdentifiers(new String[]{
                 "product_id", "product_name", "description", "category",
                 "unit_of_measure", "reorder_level", "product_status"
         });
         table.setModel(model);
 
-        // 🔒 disable in-table editing, but keep row selection
         table.setDefaultEditor(Object.class, null);
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // ----- FORM -----
         JPanel form = new JPanel(new GridLayout(0, 2, 8, 8));
         form.setBorder(BorderFactory.createTitledBorder("Add / Update Product"));
         form.add(new JLabel("Name:")); form.add(tfName);
@@ -43,7 +40,6 @@ public class ProductPanel extends JPanel {
         form.add(new JLabel("Reorder Level:")); form.add(tfReorder);
         form.add(new JLabel("Status:")); form.add(cbStatus);
 
-        // ----- BUTTONS -----
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttons.add(btnLoad);
         buttons.add(btnAdd);
@@ -55,25 +51,21 @@ public class ProductPanel extends JPanel {
         south.add(buttons, BorderLayout.SOUTH);
         add(south, BorderLayout.SOUTH);
 
-        // ----- ACTIONS -----
         btnLoad.addActionListener(e -> loadProducts());
         btnAdd.addActionListener(e -> addProduct());
         btnUpdate.addActionListener(e -> updateSelectedProduct());
         btnDelete.addActionListener(e -> deleteSelectedProduct());
 
-        // Load data initially
         loadProducts();
     }
 
-    private void loadProducts() {
+    private void loadProducts(){
         model.setRowCount(0);
-        String sql = "SELECT product_id, product_name, description, category, " +
-                "unit_of_measure, reorder_level, product_status " +
-                "FROM Product ORDER BY product_name";
-        try (Connection c = DBUtils.getConn();
+        String sql = "SELECT product_id, product_name, description, category, " + "unit_of_measure, reorder_level, product_status " + "FROM Product ORDER BY product_name";
+        try(Connection c = DBUtils.getConn();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
+            while(rs.next()){
                 model.addRow(new Object[]{
                         rs.getInt(1),
                         rs.getString(2),
@@ -84,81 +76,79 @@ public class ProductPanel extends JPanel {
                         rs.getString(7)
                 });
             }
-        } catch (SQLException ex) {
+        } catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
 
-    private void addProduct() {
-        if (JOptionPane.showConfirmDialog(this, "Add this product?", "Confirm",
-                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+    private void addProduct(){
+        if(JOptionPane.showConfirmDialog(this, "Add this product?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
 
-        String sql = "INSERT INTO Product " +
-                "(product_name, description, category, unit_of_measure, reorder_level, product_status) " +
-                "VALUES (?,?,?,?,?,?)";
-        try (Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-
-            ps.setString(1, tfName.getText().trim());
-            ps.setString(2, tfDesc.getText().trim());
-            ps.setString(3, tfCategory.getText().trim());
-            ps.setString(4, tfUom.getText().trim());
-            ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
-            ps.setString(6, (String) cbStatus.getSelectedItem());
-            ps.executeUpdate();
-            loadProducts();
-            clearForm();
-        } catch (SQLException ex) {
+        String sql = "INSERT INTO Product " + "(product_name, description, category, unit_of_measure, reorder_level, product_status) " + "VALUES (?,?,?,?,?,?)";
+        try(Connection c = DBUtils.getConn();
+            PreparedStatement ps = c.prepareStatement(sql)){
+                ps.setString(1, tfName.getText().trim());
+                ps.setString(2, tfDesc.getText().trim());
+                ps.setString(3, tfCategory.getText().trim());
+                ps.setString(4, tfUom.getText().trim());
+                ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
+                ps.setString(6, (String) cbStatus.getSelectedItem());
+                ps.executeUpdate();
+                loadProducts();
+                clearForm();
+        }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
 
-    private void updateSelectedProduct() {
+    private void updateSelectedProduct(){
         int row = table.getSelectedRow();
-        if (row < 0) { DBUtils.info("Select a product first."); return; }
+        if(row < 0){
+            DBUtils.info("Select a product first.");
+            return;
+        }
         int id = (int) model.getValueAt(row, 0);
 
-        if (JOptionPane.showConfirmDialog(this, "Update product #" + id + "?",
-                "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this, "Update product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
 
-        String sql = "UPDATE Product SET product_name=?, description=?, category=?, " +
-                "unit_of_measure=?, reorder_level=?, product_status=? WHERE product_id=?";
-        try (Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-
-            ps.setString(1, tfName.getText().trim());
-            ps.setString(2, tfDesc.getText().trim());
-            ps.setString(3, tfCategory.getText().trim());
-            ps.setString(4, tfUom.getText().trim());
-            ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
-            ps.setString(6, (String) cbStatus.getSelectedItem());
-            ps.setInt(7, id);
-            ps.executeUpdate();
-            loadProducts();
-        } catch (SQLException ex) {
+        String sql = "UPDATE Product SET product_name=?, description=?, category=?, " + "unit_of_measure=?, reorder_level=?, product_status=? WHERE product_id=?";
+        try(Connection c = DBUtils.getConn();
+            PreparedStatement ps = c.prepareStatement(sql)){
+                ps.setString(1, tfName.getText().trim());
+                ps.setString(2, tfDesc.getText().trim());
+                ps.setString(3, tfCategory.getText().trim());
+                ps.setString(4, tfUom.getText().trim());
+                ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
+                ps.setString(6, (String) cbStatus.getSelectedItem());
+                ps.setInt(7, id);
+                ps.executeUpdate();
+                loadProducts();
+        }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
 
-    private void deleteSelectedProduct() {
+    private void deleteSelectedProduct(){
         int row = table.getSelectedRow();
-        if (row < 0) { DBUtils.info("Select a product first."); return; }
+        if(row < 0){ 
+            DBUtils.info("Select a product first."); 
+            return;
+        }
         int id = (int) model.getValueAt(row, 0);
 
-        if (JOptionPane.showConfirmDialog(this, "Delete product #" + id + "?",
-                "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
+        if(JOptionPane.showConfirmDialog(this, "Delete product #" + id + "?", "Confirm", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
 
-        try (Connection c = DBUtils.getConn();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM Product WHERE product_id=?")) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
-            loadProducts();
-        } catch (SQLException ex) {
+        try(Connection c = DBUtils.getConn();
+            PreparedStatement ps = c.prepareStatement("DELETE FROM Product WHERE product_id=?")) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+                loadProducts();
+        }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
 
-    private void clearForm() {
+    private void clearForm(){
         tfName.setText("");
         tfDesc.setText("");
         tfCategory.setText("");
