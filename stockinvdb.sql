@@ -86,7 +86,7 @@ VALUES
 -- StockMovement (IN)
 INSERT INTO StockMovement (product_id, location_id, supplier_id, quantity, movement_type, movement_date, reason)
 VALUES
-(1, 3, 1, 50, 'IN', '2025-11-12', 'Initial rice stock'),
+(1, 3, 1, 10, 'IN', '2025-11-12', 'Initial rice stock'),
 (2, 1, 1, 20, 'IN', '2025-11-12', 'Fresh chicken delivery'),
 (3, 2, 2, 100, 'IN', '2025-11-12', 'Soda cans restock'),
 (4, 4, 3, 200, 'IN', '2025-11-12', 'Packaging supply'),
@@ -96,9 +96,30 @@ VALUES
 -- StockMovement (OUT)
 INSERT INTO StockMovement (product_id, location_id, supplier_id, quantity, movement_type, movement_date, reason)
 VALUES
-(1, 3, NULL, 50, 'OUT', '2025-11-13', 'Used for prep'),
-(2, 1, NULL, 19	, 'OUT', '2025-11-13', 'Used for prep'),
+(1, 3, NULL, 3.5, 'OUT', '2025-11-13', 'Used for prep'),
+(2, 1, NULL, 2, 'OUT', '2025-11-13', 'Used for prep'),
 (3, 2, NULL, 10, 'OUT', '2025-11-13', 'Served to customers'),
 (2, 1, NULL, 0.5, 'OUT', '2025-11-13', 'Spoilage'),
 (5, 2, NULL, 1.2, 'OUT', '2025-11-13', 'Used in recipe'),
 (6, 2, NULL, 0.8, 'OUT', '2025-11-13', 'Used in recipe');
+
+SELECT 
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.unit_of_measure,
+    l.location_name,
+    SUM(CASE WHEN sm.movement_type = 'IN' THEN sm.quantity ELSE 0 END) -
+    SUM(CASE WHEN sm.movement_type = 'OUT' THEN sm.quantity ELSE 0 END) AS current_stock,
+    p.reorder_level,
+    CASE 
+        WHEN SUM(CASE WHEN sm.movement_type = 'IN' THEN sm.quantity ELSE 0 END) -
+             SUM(CASE WHEN sm.movement_type = 'OUT' THEN sm.quantity ELSE 0 END) <= p.reorder_level
+        THEN '⚠ Reorder Needed'
+        ELSE 'OK'
+    END AS stock_status
+FROM Product p
+JOIN StockMovement sm ON p.product_id = sm.product_id
+JOIN StorageLocation l ON sm.location_id = l.location_id
+GROUP BY p.product_id, l.location_id
+ORDER BY p.category, p.product_name, l.location_name;
