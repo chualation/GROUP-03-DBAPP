@@ -1,85 +1,166 @@
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.math.BigDecimal;
 import java.sql.*;
 
-public class ReportPanel extends JPanel{
+public class SupplierPanel extends JPanel{
     private final JTable table = new JTable();
     private final DefaultTableModel model = new DefaultTableModel();
+    private final JTextField tfName = new JTextField();
+    private final JTextField tfContactPerson = new JTextField();
+    private final JTextField tfContactNo = new JTextField();
+    private final JTextField tfEmail = new JTextField();
+    private final JTextField tfAddress = new JTextField();
+    private final JComboBox<String> cbStatus = new JComboBox<>(new String[]{"Active","Inactive"});
 
-    public ReportPanel(){
-        setLayout(new BorderLayout());
-        model.setColumnIdentifiers(new String[]{"Product","Stock","Reorder Level","Stock Status"});
+    public SupplierPanel(){
+        setLayout(new BorderLayout(10,10));
+        model.setColumnIdentifiers(new String[]{
+                "supplier_id","supplier_name","contact_person","contact_number","email","address","supplier_status"
+        });
         table.setModel(model);
 
         table.setDefaultEditor(Object.class, null);
 
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer(){
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column){
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        add(new JScrollPane(table),BorderLayout.CENTER);
 
-                if(!isSelected){
-                    Object stockObj = table.getValueAt(row, 1);
-                    Object reorderObj = table.getValueAt(row, 2);
+        JPanel form = new JPanel(new GridLayout(0,2,8,8));
+        form.setBorder(BorderFactory.createTitledBorder("Add / Update Supplier"));
+        form.add(new JLabel("Name:"));            form.add(tfName);
+        form.add(new JLabel("Contact Person:"));  form.add(tfContactPerson);
+        form.add(new JLabel("Contact Number:"));  form.add(tfContactNo);
+        form.add(new JLabel("Email:"));           form.add(tfEmail);
+        form.add(new JLabel("Address:"));         form.add(tfAddress);
+        form.add(new JLabel("Status:"));          form.add(cbStatus);
 
-                    Color outOfStock = Color.decode("#ea9899"); // Out of stock
-                    Color lowStock   = Color.decode("#fee39a"); // Low
-                    Color okStock    = Color.decode("#b7d7a8"); // OK
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnAdd=new JButton("Add"), btnUpdate=new JButton("Update Selected"), btnDelete=new JButton("Delete Selected");
+        buttons.add(btnAdd); buttons.add(btnUpdate); buttons.add(btnDelete);
 
-                    if(stockObj instanceof BigDecimal && reorderObj instanceof BigDecimal){
-                        BigDecimal stock = (BigDecimal) stockObj;
-                        BigDecimal reorder = (BigDecimal) reorderObj;
+        JPanel south=new JPanel(new BorderLayout());
+        south.add(form,BorderLayout.CENTER);
+        south.add(buttons,BorderLayout.SOUTH);
+        add(south,BorderLayout.SOUTH);
 
-                        if(stock.compareTo(BigDecimal.ZERO) == 0){
-                            c.setBackground(outOfStock);
-                        }else if(stock.compareTo(reorder) < 0){
-                            c.setBackground(lowStock);
-                        }else{
-                            c.setBackground(okStock);
-                        }
-                    }else{
-                        c.setBackground(table.getBackground());
-                    }
+        btnAdd.addActionListener(e->addSupplier());
+        btnUpdate.addActionListener(e->updateSelectedSupplier());
+        btnDelete.addActionListener(e->deleteSelectedSupplier());
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    tfName.setText(model.getValueAt(row, 1).toString());
+                    tfContactPerson.setText(model.getValueAt(row, 2).toString());
+                    tfContactNo.setText(model.getValueAt(row, 3).toString());
+                    tfEmail.setText(model.getValueAt(row, 4).toString());
+                    tfAddress.setText(model.getValueAt(row, 5).toString());
+                    cbStatus.setSelectedItem(model.getValueAt(row, 6).toString());
                 }
-                return c;
             }
         });
 
-        add(new JScrollPane(table), BorderLayout.CENTER);
-        loadReport();
+        loadSuppliers();
     }
 
-    public void loadReport() {
+    private void loadSuppliers(){
         model.setRowCount(0);
-        String sql = "SELECT product_name," +
-                " SUM(CASE WHEN movement_type='IN' THEN quantity ELSE -quantity END) AS stock," +
-                " reorder_level " +
-                "FROM Product p " +
-                "LEFT JOIN StockMovement m ON p.product_id=m.product_id " +
-                "GROUP BY product_name, reorder_level";
-        try(Connection c = DBUtils.getConn();
-            PreparedStatement ps = c.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
-
+        String sql="SELECT supplier_id,supplier_name,contact_person,contact_number,email,address,supplier_status " +
+                "FROM Supplier ORDER BY supplier_name";
+        try(Connection c=DBUtils.getConn();
+            PreparedStatement ps=c.prepareStatement(sql);
+            ResultSet rs=ps.executeQuery()){
             while(rs.next()){
-                BigDecimal stock = rs.getBigDecimal("stock");
-                if(stock == null) stock = BigDecimal.ZERO;
-                BigDecimal reorder = rs.getBigDecimal("reorder_level");
-                if(reorder == null) reorder = BigDecimal.ZERO;
-
-                String status = (stock.compareTo(BigDecimal.ZERO) == 0) ? "OUT OF STOCK" : (stock.compareTo(reorder) < 0) ? "LOW" : "OK";
-
-                model.addRow(new Object[]{rs.getString("product_name"), stock, reorder, status});
+                model.addRow(new Object[]{
+                        rs.getInt(1), rs.getString(2), rs.getString(3),
+                        rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7)
+                });
             }
         }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
     }
 
-    public void refresh(){
-        loadReport();
+    private void addSupplier(){
+        if(JOptionPane.showConfirmDialog(this,"Add this supplier?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION){
+            return;
+        }
+
+        String sql="INSERT INTO Supplier (supplier_name, contact_person, contact_number, email, address, supplier_status) " + "VALUES (?,?,?,?,?,?)";
+        try(Connection c=DBUtils.getConn();
+            PreparedStatement ps=c.prepareStatement(sql)){
+            ps.setString(1,tfName.getText().trim());
+            ps.setString(2,tfContactPerson.getText().trim());
+            ps.setString(3,tfContactNo.getText().trim());
+            ps.setString(4,tfEmail.getText().trim());
+            ps.setString(5,tfAddress.getText().trim());
+            ps.setString(6,(String)cbStatus.getSelectedItem());
+            ps.executeUpdate();
+            loadSuppliers();
+            clearForm();
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
+    }
+
+    private void updateSelectedSupplier(){
+        int row=table.getSelectedRow();
+        if(row<0){
+            DBUtils.info("Select a supplier first.");
+            return;
+        }
+
+        int id=(int)model.getValueAt(row,0);
+        if(JOptionPane.showConfirmDialog(this,"Update supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION){
+            return;
+        }
+
+        String sql="UPDATE Supplier SET supplier_name=?, contact_person=?, contact_number=?, email=?, address=?, supplier_status=? " + "WHERE supplier_id=?";
+        try(Connection c=DBUtils.getConn();
+            PreparedStatement ps=c.prepareStatement(sql)){
+            ps.setString(1,tfName.getText().trim());
+            ps.setString(2,tfContactPerson.getText().trim());
+            ps.setString(3,tfContactNo.getText().trim());
+            ps.setString(4,tfEmail.getText().trim());
+            ps.setString(5,tfAddress.getText().trim());
+            ps.setString(6,(String)cbStatus.getSelectedItem());
+            ps.setInt(7,id);
+            ps.executeUpdate();
+            loadSuppliers();
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
+    }
+
+    private void deleteSelectedSupplier(){
+        int row=table.getSelectedRow();
+        if(row<0){
+            DBUtils.info("Select a supplier first.");
+            return;
+        }
+
+        int id=(int)model.getValueAt(row,0);
+        if(JOptionPane.showConfirmDialog(this,"Delete supplier #"+id+"?","Confirm", JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION){
+            return;
+        }
+
+        try(Connection c=DBUtils.getConn();
+            PreparedStatement ps=c.prepareStatement("DELETE FROM Supplier WHERE supplier_id=?")){
+            ps.setInt(1,id);
+            ps.executeUpdate();
+            loadSuppliers();
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
+    }
+
+    private void clearForm(){
+        tfName.setText("");
+        tfContactPerson.setText("");
+        tfContactNo.setText("");
+        tfEmail.setText("");
+        tfAddress.setText("");
+        cbStatus.setSelectedIndex(0);
     }
 }
+
