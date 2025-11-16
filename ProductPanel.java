@@ -40,7 +40,6 @@ public class ProductPanel extends JPanel {
 
     public ProductPanel() {
         setLayout(new BorderLayout(10, 10));
-        setBackground(Color.RED); // strip at top
 
         // ================= TABLE (READ-ONLY, CLEAN) =================
         model = new DefaultTableModel(new String[]{
