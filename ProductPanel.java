@@ -296,26 +296,48 @@ public class ProductPanel extends JPanel {
     }
 
     private void addProduct() {
-        String sql =
-                "INSERT INTO Product " +
-                        "(product_name, description, category, unit_of_measure, reorder_level, product_status, supplier_id, location_id) " +
-                        "VALUES (?,?,?,?,?,?,?,?)";
+        // Input validations
+        if (!DBUtils.validateText(tfName.getText().trim(), "Name", this)) return;
+        if (!DBUtils.validateText(tfDesc.getText().trim(), "Description", this)) return;
+        if (!DBUtils.validateText(tfCategory.getText().trim(), "Category", this)) return;
+        if (!DBUtils.validateNumber(tfReorder.getText().trim(), "Reorder Level", this)) return;
 
-        try (Connection conn = DBUtils.getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String name = tfName.getText().trim();
+        Integer supplierId = supplierIds.get(cbSupplier.getSelectedIndex());
+        
+        // Check if the same product from the same supplier gets added (duplicate product)
+        try (Connection conn = DBUtils.getConn()) {
+            String checkSql = "SELECT COUNT(*) FROM Product WHERE product_name = ? AND supplier_id = ?";
+            try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+                checkPs.setString(1, name);
+                checkPs.setObject(2, supplierId); // handles null supplier
+                ResultSet rs = checkPs.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    JOptionPane.showMessageDialog(this,
+                            "A product with this name already exists for the selected supplier.",
+                            "Duplicate Product",
+                            JOptionPane.ERROR_MESSAGE);
+                    return; // stop insertion
+                }
+            }
 
-            ps.setString(1, tfName.getText().trim());
-            ps.setString(2, tfDesc.getText().trim());
-            ps.setString(3, tfCategory.getText().trim());
-            ps.setString(4, tfUom.getText().trim());
-            ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
-            ps.setString(6, (String) cbStatus.getSelectedItem());
+            String sql =
+                    "INSERT INTO Product " +
+                            "(product_name, description, category, unit_of_measure, reorder_level, product_status, supplier_id, location_id) " +
+                            "VALUES (?,?,?,?,?,?,?,?)";
 
-            // NEW: supplier_id + location_id (null allowed)
-            ps.setObject(7, supplierIds.get(cbSupplier.getSelectedIndex()));
-            ps.setObject(8, locationIds.get(cbLocation.getSelectedIndex()));
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, name);
+                ps.setString(2, tfDesc.getText().trim());
+                ps.setString(3, tfCategory.getText().trim());
+                ps.setString(4, tfUom.getText().trim());
+                ps.setBigDecimal(5, DBUtils.toDecimal(tfReorder.getText()));
+                ps.setString(6, (String) cbStatus.getSelectedItem());
+                ps.setObject(7, supplierId);
+                ps.setObject(8, locationIds.get(cbLocation.getSelectedIndex()));
 
-            ps.executeUpdate();
+                ps.executeUpdate();
+            }
 
             loadProducts();
             clearForm();
@@ -326,6 +348,12 @@ public class ProductPanel extends JPanel {
     }
 
     private void updateSelectedProduct() {
+        // Input validations
+        if (!DBUtils.validateText(tfName.getText().trim(), "Name", this)) return;
+        if (!DBUtils.validateText(tfDesc.getText().trim(), "Description", this)) return;
+        if (!DBUtils.validateText(tfCategory.getText().trim(), "Category", this)) return;
+        if (!DBUtils.validateNumber(tfReorder.getText().trim(), "Reorder Level", this)) return;
+        
         int row = table.getSelectedRow();
         if (row < 0) {
             DBUtils.info("Select a product first.");
@@ -445,3 +473,4 @@ public class ProductPanel extends JPanel {
         }
     }
 }
+
