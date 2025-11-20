@@ -229,6 +229,11 @@ public class MovementPanel extends JPanel {
     }
 
     private void addMovement(){
+        // Input validation
+        if(!DBUtils.validateNumber(tfQty.getText().trim(), "Quantity", this)) return;
+        if(!DBUtils.validateText(tfReason.getText(), "Reason", this)) return;
+        if(!DBUtils.validateDate(tfDate.getText(), "Date", this)) return;
+        
         if(JOptionPane.showConfirmDialog(this, "Add this movement?", "Confirm",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
@@ -278,3 +283,4 @@ public class MovementPanel extends JPanel {
         }
     }
 }
+
