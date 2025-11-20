@@ -156,6 +156,13 @@ public class SupplierPanel extends JPanel {
     }
 
     private void addSupplier(){
+        // Input validations
+        if (!DBUtils.validateText(tfName.getText().trim(), "Name", this)) return;
+        if (!DBUtils.validateText(tfContactPerson.getText().trim(), "Contact Person", this)) return;
+        if (!DBUtils.validateNumber(tfContactNo.getText().trim(), "Contact Number", this)) return;
+        if (!DBUtils.validateText(tfEmail.getText().trim(), "Email", this)) return;
+        if (!DBUtils.validateText(tfAddress.getText().trim(), "Address", this)) return;
+        
         if(JOptionPane.showConfirmDialog(this,"Add this supplier?","Confirm",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
@@ -182,6 +189,13 @@ public class SupplierPanel extends JPanel {
     }
 
     private void updateSelectedSupplier(){
+        // Input validations
+        if (!DBUtils.validateText(tfName.getText().trim(), "Name", this)) return;
+        if (!DBUtils.validateText(tfContactPerson.getText().trim(), "Contact Person", this)) return;
+        if (!DBUtils.validateNumber(tfContactNo.getText().trim(), "Contact Number", this)) return;
+        if (!DBUtils.validateText(tfEmail.getText().trim(), "Email", this)) return;
+        if (!DBUtils.validateText(tfAddress.getText().trim(), "Address", this)) return;
+        
         int row = table.getSelectedRow();
         if(row < 0){
             DBUtils.info("Select a supplier first.");
@@ -246,3 +260,4 @@ public class SupplierPanel extends JPanel {
         cbStatus.setSelectedIndex(0);
     }
 }
+
