@@ -220,6 +220,11 @@ public class LocationPanel extends JPanel {
     }
 
     private void addLocation(){
+        // Input validations
+        if(!DBUtils.validateText(tfName.getText().trim(), "Location Name", this)) return;
+        if(!DBUtils.validateText(tfAreaDesc.getText().trim(), "Area Description", this)) return;
+        if(!DBUtils.validateNumber(tfCapacity.getText().trim(), "Capacity", this)) return;
+        
         if(JOptionPane.showConfirmDialog(this,"Add this location?","Confirm",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
             return;
@@ -245,6 +250,11 @@ public class LocationPanel extends JPanel {
     }
 
     private void updateSelectedLocation(){
+        // Input validations
+        if(!DBUtils.validateText(tfName.getText().trim(), "Location Name", this)) return;
+        if(!DBUtils.validateText(tfAreaDesc.getText().trim(), "Area Description", this)) return;
+        if(!DBUtils.validateNumber(tfCapacity.getText().trim(), "Capacity", this)) return;
+        
         int row = table.getSelectedRow();
         if(row < 0){
             DBUtils.info("Select a location first.");
@@ -308,3 +318,4 @@ public class LocationPanel extends JPanel {
         cbTemp.setSelectedIndex(0);
     }
 }
+
