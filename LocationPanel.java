@@ -15,9 +15,16 @@ public class LocationPanel extends JPanel {
     private final JTextField tfAreaDesc = new JTextField();
     private final JTextField tfCapacity = new JTextField("0");
     private final JComboBox<String> cbTemp = new JComboBox<>(new String[]{"None","Refrigerated","Freezer"});
+    private final JComboBox<String> cbFilter = new JComboBox<>(); //new: filter dropdown
 
     public LocationPanel() {
         setLayout(new BorderLayout(10,10));
+
+        // ====== TOP PANEL FOR FILTER ===== //new
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topPanel.add(new JLabel("Filter by Location:")); //new
+        topPanel.add(cbFilter); //new
+        add(topPanel, BorderLayout.NORTH); //new
 
         // ====== TABLE MODEL (LOCKED) ======
         model = new DefaultTableModel(new String[]{
@@ -25,13 +32,12 @@ public class LocationPanel extends JPanel {
         }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Lock all table cells; editing only via form below
                 return false;
             }
         };
         table.setModel(model);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDefaultEditor(Object.class, null); // extra safety
+        table.setDefaultEditor(Object.class, null);
 
         // Styling (optional but cleaner)
         table.setRowHeight(30);
@@ -84,36 +90,35 @@ public class LocationPanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 int clickedRow  = table.rowAtPoint(e.getPoint());
                 int selectedRow = table.getSelectedRow();
-
-                // DOUBLE CLICK on row → select & load into form
                 if (e.getClickCount() == 2 && clickedRow >= 0) {
                     table.setRowSelectionInterval(clickedRow, clickedRow);
                     fillFormFromRow(clickedRow);
                     return;
                 }
-
-                // SINGLE CLICK behavior
                 if (e.getClickCount() == 1) {
-                    // Clicked outside rows → ignore (no change)
-                    if (clickedRow < 0) {
-                        return;
-                    }
-
-                    // Clicked the SAME selected row → unselect + clear form
+                    if (clickedRow < 0) return;
                     if (clickedRow == selectedRow) {
                         table.clearSelection();
                         clearForm();
                         return;
                     }
-
-                    // Clicked a DIFFERENT row → just select it
                     table.setRowSelectionInterval(clickedRow, clickedRow);
-                    // (form only fills on double-click, same as ProductPanel)
                 }
             }
         });
 
         loadLocations();
+        loadFilterOptions(); //new: populate filter dropdown
+
+        // ====== FILTER ACTION ===== //new
+        cbFilter.addActionListener(e -> {
+            String selected = (String) cbFilter.getSelectedItem();
+            if(selected == null || selected.equals("None")){
+                loadLocations();
+            }else{
+                showProductsInLocation(selected);
+            }
+        });
     }
 
     private void fillFormFromRow(int row) {
@@ -144,6 +149,76 @@ public class LocationPanel extends JPanel {
         }
     }
 
+    //new: populate filter dropdown
+    private void loadFilterOptions(){
+        cbFilter.removeAllItems();
+        cbFilter.addItem("None");
+        String sql = "SELECT location_name FROM StorageLocation ORDER BY location_name";
+        try(Connection c = DBUtils.getConn();
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()){
+            while(rs.next()){
+                cbFilter.addItem(rs.getString(1));
+            }
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
+    }
+
+    //new: show products in selected location
+    private void showProductsInLocation(String locationName){
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Do you want to see all products in \""+locationName+"\"?",
+                "Confirm", JOptionPane.YES_NO_OPTION);
+        if(confirm != JOptionPane.YES_OPTION) return;
+
+        // Popup dialog
+        JDialog dialog = new JDialog((Frame)null,"Products in "+locationName,true);
+        DefaultTableModel prodModel = new DefaultTableModel(new String[]{
+                "Product ID","Name","Description","UoM"
+        },0){
+            @Override
+            public boolean isCellEditable(int row, int column){ return false; }
+        };
+        JTable prodTable = new JTable(prodModel);
+        prodTable.setRowHeight(25);
+        prodTable.setBackground(Color.WHITE);
+        prodTable.setShowGrid(false);
+        prodTable.setShowHorizontalLines(false);
+        prodTable.setShowVerticalLines(false);
+        // Center all columns //new
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(SwingConstants.CENTER);
+        for(int i=0;i<prodTable.getColumnCount();i++){
+            prodTable.getColumnModel().getColumn(i).setCellRenderer(center);
+        }
+
+        String sql = "SELECT product_id, product_name, description, unit_of_measure " +
+                "FROM Product p " +
+                "JOIN StorageLocation l ON p.location_id = l.location_id " +
+                "WHERE l.location_name = ? ORDER BY product_name"; //new: only from Product.location_id
+        try(Connection c = DBUtils.getConn();
+            PreparedStatement ps = c.prepareStatement(sql)){
+            ps.setString(1,locationName);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                prodModel.addRow(new Object[]{
+                        rs.getInt(1),
+                        rs.getString(2),
+                        rs.getString(3),
+                        rs.getString(4)
+                });
+            }
+        }catch(SQLException ex){
+            DBUtils.showErr(ex);
+        }
+
+        dialog.add(new JScrollPane(prodTable));
+        dialog.setSize(600,400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
     private void addLocation(){
         if(JOptionPane.showConfirmDialog(this,"Add this location?","Confirm",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION){
@@ -161,6 +236,7 @@ public class LocationPanel extends JPanel {
             ps.setString(4, (String) cbTemp.getSelectedItem());
             ps.executeUpdate();
             loadLocations();
+            loadFilterOptions(); //new: refresh filter after adding
             clearForm();
             table.clearSelection();
         }catch(SQLException ex){
@@ -192,6 +268,7 @@ public class LocationPanel extends JPanel {
             ps.setInt(5, id);
             ps.executeUpdate();
             loadLocations();
+            loadFilterOptions(); //new: refresh filter after update
         }catch(SQLException ex){
             DBUtils.showErr(ex);
         }
@@ -216,6 +293,7 @@ public class LocationPanel extends JPanel {
             ps.setInt(1, id);
             ps.executeUpdate();
             loadLocations();
+            loadFilterOptions(); //new: refresh filter after delete
             table.clearSelection();
             clearForm();
         }catch(SQLException ex){
