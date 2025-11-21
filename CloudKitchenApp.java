@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.InputStream;
@@ -77,8 +76,8 @@ public class CloudKitchenApp extends JFrame {
         // ----------------- SIDEBAR -----------------
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBackground(BG_COLOR);
-        sidebar.setBorder(BorderFactory.createEmptyBorder(15, 15, 0, 0));
+        sidebar.setBackground(SIDEBAR_BG);
+        sidebar.setBorder(BorderFactory.createEmptyBorder(15, 15, 0, 15));
 
         // Create buttons with normal and active icons
         JButton btnProducts = createSidebarButton(
