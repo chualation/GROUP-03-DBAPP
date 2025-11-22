@@ -158,13 +158,13 @@ public class MovementPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(productsPanel);
         scroll.setBorder(BorderFactory.createTitledBorder("Select a Product"));
         scroll.getVerticalScrollBar().setUnitIncrement(16);
-        scroll.setPreferredSize(new Dimension(0, 500));
+        scroll.setPreferredSize(new Dimension(0, 300));
 
         wrapper.add(scroll, BorderLayout.CENTER);
 
         productsScrollPane = new JScrollPane(wrapper);
         productsScrollPane.setBorder(null);
-        productsScrollPane.setPreferredSize(new Dimension(0, 550)); // overall height
+        productsScrollPane.setPreferredSize(new Dimension(0, 350)); // overall height
         productsScrollPane.setVisible(false);
     }
 
